@@ -188,7 +188,8 @@ class TechnicalIndicators:
         cls, 
         df: DataFrame, 
         technical_indicator_name: str, 
-        diff: bool = True):
+        diff: bool = True,
+        digits: int=4):
         """前回値と前回値との差を追加
 
         Args:
@@ -209,6 +210,6 @@ class TechnicalIndicators:
 
                 if diff:
                     df[f'{column}_shift_diff'] = (
-                        df[column] - df[f'{column}_shift'])
+                        df[column] - df[f'{column}_shift']).round(digits)
         
         return df
