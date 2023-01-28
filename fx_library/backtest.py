@@ -224,6 +224,20 @@ class Backtest:
             'detail': detail_data}
     
     def detail_performance(self, df: DataFrame, profit: int, loss: int):
+        """実績の詳細
+
+        Args:
+            df (DataFrame): バックテスト結果のデーフレーム
+            profit (int): 利益
+            loss (int): 損失
+            
+        Returns:
+            Dict: 実績の詳細
+
+        Examples:
+            >>> detail_data = self.detail_performance(
+                    self, df=backtest_df, profit=10, loss=10)
+        """
         df['order_time'] = pd.to_datetime(df['order_time'])
 
         df['year'] = df['order_time'].dt.year
@@ -244,6 +258,18 @@ class Backtest:
     
     @staticmethod
     def calculation_detail(df: DataFrame, group_list: list):
+        """実績の詳細の計算
+
+        Args:
+            df (DataFrame): バックテスト結果のデーフレーム
+            group_list (list): groupbyの引数
+        
+        Returns:
+            Dict: 実績の詳細
+
+        Examples:
+            >>> self.calculation_detail(df=df, group_list=['year', 'month'])
+        """
         group = df.groupby(group_list)
         profit_group = df.loc[df['result'] >= 1].groupby(group_list)
         loss_group = df.loc[df['result'] <= -1].groupby(group_list)
