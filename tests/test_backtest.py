@@ -225,6 +225,30 @@ class TestTechnicalIndicators:
             'profit_rate': 50.0, 
             'profit_and_loss': 0, 
             'profit': 100, 
-            'loss': 100}
+            'loss': 100,
+            'detail': {
+                'year': [{
+                    'year': 2022, 
+                    'profit_and_loss': 0, 
+                    'profit_count': 1, 
+                    'loss_count': 1, 
+                    'total_count': 2, 
+                    'profit_rate': 50.0}], 
+                'month': [{
+                    'year': 2022, 
+                    'month': 10, 
+                    'profit_and_loss': 0, 
+                    'profit_count': 1, 
+                    'loss_count': 1, 
+                    'total_count': 2, 
+                    'profit_rate': 50.0}], 
+                'week': [{
+                    'year': 2022, 
+                    'week': 42, 
+                    'profit_and_loss': 0, 
+                    'profit_count': 1, 
+                    'loss_count': 1, 
+                    'total_count': 2, 
+                    'profit_rate': 50.0}]}}
 
         assert performance_result == expect

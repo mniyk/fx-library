@@ -209,6 +209,9 @@ class Backtest:
 
         profit_and_loss = (
             (profit_count * profit) - (loss_count * loss))
+        
+        detail_data = cls.detail_performance(
+            cls, df=backtest_df, profit=profit, loss=loss)
 
         return {
             'total_count': total_count,
@@ -217,4 +220,55 @@ class Backtest:
             'profit_rate': profit_rate,
             'profit_and_loss': profit_and_loss,
             'profit': profit,
-            'loss': loss}
+            'loss': loss,
+            'detail': detail_data}
+    
+    def detail_performance(self, df: DataFrame, profit: int, loss: int):
+        df['order_time'] = pd.to_datetime(df['order_time'])
+
+        df['year'] = df['order_time'].dt.year
+        df['month'] = df['order_time'].dt.month
+        df['week'] = df['order_time'].dt.isocalendar().week
+
+        df.loc[:, 'profit_and_loss'] = 0 
+        df.loc[df['result'] >= 1, 'profit_and_loss'] = profit
+        df.loc[df['result'] <= -1, 'profit_and_loss'] = loss * -1
+
+        detail_data = {
+            'year': self.calculation_detail(df=df, group_list=['year']),
+            'month': self.calculation_detail(
+                df=df, group_list=['year', 'month']),
+            'week': self.calculation_detail(df=df, group_list=['year', 'week'])}
+
+        return detail_data
+    
+    @staticmethod
+    def calculation_detail(df: DataFrame, group_list: list):
+        group = df.groupby(group_list)
+        profit_group = df.loc[df['result'] >= 1].groupby(group_list)
+        loss_group = df.loc[df['result'] <= -1].groupby(group_list)
+
+        sum_df = group.sum('profit_and_loss')['profit_and_loss']
+        profit_count_df = profit_group.count()['result']
+        loss_count_df = loss_group.count()['result']
+
+        count_df = pd.merge(
+            profit_count_df, 
+            loss_count_df, 
+            how='outer', 
+            left_index=True, 
+            right_index=True)
+
+        count_df = count_df.rename(
+            columns={'result_x': 'profit_count', 'result_y': 'loss_count'})
+        count_df['total_count'] = (
+            count_df['profit_count'] + count_df['loss_count'])
+        count_df['profit_rate'] = round(
+            (count_df['profit_count'] / count_df['total_count']) * 100, 0)
+
+        merge_df = pd.merge(
+            sum_df, count_df, how='outer', left_index=True, right_index=True)
+
+        merge_df = merge_df.reset_index()
+
+        return merge_df.to_dict(orient='records')
