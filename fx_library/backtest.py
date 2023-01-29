@@ -287,6 +287,7 @@ class Backtest:
 
         count_df = count_df.rename(
             columns={'result_x': 'profit_count', 'result_y': 'loss_count'})
+        count_df = count_df.fillna({'profit_count': 0, 'loss_count': 0})
         count_df['total_count'] = (
             count_df['profit_count'] + count_df['loss_count'])
         count_df['profit_rate'] = round(
