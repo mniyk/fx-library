@@ -18,6 +18,7 @@ class Backtest:
         close_column: str, 
         high_column: str, 
         low_column: str, 
+        spread_column: str, 
         order_count: int, 
         profit: int, 
         loss: int,
@@ -30,6 +31,7 @@ class Backtest:
             close_column (str): 終値の列名
             high_column (str): 高値の列名
             low_column (str): 安値の列名
+            spread_column (str): スプレッドの列名
             order_count (int): 注文数
             profit (int): 利益
             loss (int): 損失
@@ -52,6 +54,7 @@ class Backtest:
         self.close_column = close_column
         self.high_column = high_column
         self.low_column = low_column
+        self.spread_column = spread_column
         self.order_count = order_count
         self.profit = profit
         self.loss = loss
@@ -64,6 +67,7 @@ class Backtest:
         self.close_index = df.columns.get_loc(self.close_column)
         self.high_index = df.columns.get_loc(self.high_column)
         self.low_index = df.columns.get_loc(self.low_column)
+        self.spread_index = df.columns.get_loc(self.spread_column)
 
     def run(self, func, reverse_order: bool=False, **kwargs) -> None:
         """バックテストの実行
@@ -113,13 +117,16 @@ class Backtest:
             direction (int): 売買方向
         """
         close_price = data[self.close_index]
+        spread = data[self.spread_index] * self.pip     
+
+        order_price = close_price + spread if direction == 1 else close_price
         
         profit_pip = self.profit * self.pip
         loss_pip = self.loss * self.pip
 
         result = {
             'order_time': data[self.time_index],
-            'order_price': close_price,
+            'order_price': order_price,
             'direction': direction,
             'profit_price': None,
             'loss_price': None,
@@ -146,6 +153,8 @@ class Backtest:
         Args:
             data (Series): ローソク足データ
         """
+        spread = data[self.spread_index] * self.pip     
+
         high_price = data[self.high_index]
         low_price = data[self.low_index]
 
@@ -165,6 +174,9 @@ class Backtest:
                             settlement_price = high_price
                             result = 1
                 elif key == 'bid':
+                    high_price = high_price + spread
+                    low_price = low_price + spread
+
                     if loss_price <= high_price:
                         settlement_price = high_price
                         result = -1

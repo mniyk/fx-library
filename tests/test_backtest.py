@@ -5,11 +5,12 @@ from fx_library.backtest import Backtest
 from fx_library.utils import direction_by_value_range
 
 
-class TestTechnicalIndicators:
+class TestBacktest:
     time_column='time' 
     close_column='close' 
     high_column='high' 
     low_column='low' 
+    spread_column='spread'
     order_count=1 
     profit=100 
     loss=100 
@@ -17,14 +18,14 @@ class TestTechnicalIndicators:
 
     def setup_method(self):
         data = [
-            ['2022-10-20 01:00:00', 100.0, 100.5, 99.5, 100.0, 20, 20],
-            ['2022-10-20 02:00:00', 100.0, 100.5, 99.5, 100.0, 90, 20],
-            ['2022-10-20 03:00:00', 100.0, 100.5, 99.5, 100.0, 90, 20],
-            ['2022-10-20 04:00:00', 100.0, 100.5, 99.5, 100.0, -90, -20],
-            ['2022-10-20 05:00:00', 100.0, 100.5, 99.5, 100.0, -20, -20],
-            ['2022-10-20 06:00:00', 100.0, 100.5, 99.5, 100.0, -90, -20],
-            ['2022-10-20 07:00:00', 100.0, 100.5, 98.5, 100.0, 20, 20],
-            ['2022-10-20 08:00:00', 100.0, 102.5, 99.5, 100.0, 20, 20]]
+            ['2022-10-20 01:00:00', 100.0, 100.5, 99.5, 100.0, 3, 20, 20],
+            ['2022-10-20 02:00:00', 100.0, 100.5, 99.5, 100.0, 3, 90, 20],
+            ['2022-10-20 03:00:00', 100.0, 100.5, 99.5, 100.0, 3, 90, 20],
+            ['2022-10-20 04:00:00', 100.0, 100.5, 99.5, 100.0, 3, -90, -20],
+            ['2022-10-20 05:00:00', 100.0, 100.5, 99.5, 100.0, 3, -20, -20],
+            ['2022-10-20 06:00:00', 100.0, 100.5, 99.5, 100.0, 3, -90, -20],
+            ['2022-10-20 07:00:00', 100.0, 100.5, 98.5, 100.0, 3, 20, 20],
+            ['2022-10-20 08:00:00', 100.0, 102.5, 99.5, 100.0, 3, 20, 20]]
 
         self.df = pd.DataFrame(
             data, 
@@ -34,6 +35,7 @@ class TestTechnicalIndicators:
                 'high', 
                 'low', 
                 'close', 
+                'spread',
                 'rci_12', 
                 'rci_12_shift_diff'])
 
@@ -43,6 +45,7 @@ class TestTechnicalIndicators:
             close_column=self.close_column,
             high_column=self.high_column,
             low_column=self.low_column,
+            spread_column=self.spread_column,
             order_count=self.order_count,
             profit=self.profit,
             loss=self.loss,
@@ -56,7 +59,7 @@ class TestTechnicalIndicators:
                 [
                     {
                         'order_time': '2022-10-20 02:00:00', 
-                        'order_price': 100.0, 
+                        'order_price': 100.03, 
                         'direction': 1, 
                         'profit_price': 101.0, 
                         'loss_price': 99.0, 
@@ -70,14 +73,14 @@ class TestTechnicalIndicators:
                         'profit_price': 99.0, 
                         'loss_price': 101.0, 
                         'settlement_time': '2022-10-20 07:00:00', 
-                        'settlement_price': 98.5, 
+                        'settlement_price': 98.53, 
                         'result': 1}]],
             [
                 True, 
                 [
                     {
                         'order_time': '2022-10-20 02:00:00', 
-                        'order_price': 100.0, 
+                        'order_price': 100.03, 
                         'direction': 1, 
                         'profit_price': 101.0, 
                         'loss_price': 99.0, 
@@ -91,7 +94,7 @@ class TestTechnicalIndicators:
                         'profit_price': 99.0, 
                         'loss_price': 101.0, 
                         'settlement_time': '2022-10-20 07:00:00', 
-                        'settlement_price': 98.5, 
+                        'settlement_price': 98.53, 
                         'result': 1}]]])
     def test_run(self, reverse_order, expect):
         self.back.run(
@@ -112,7 +115,7 @@ class TestTechnicalIndicators:
                 {
                     'ask': [{
                         'order_time': '2022-10-20 01:00:00', 
-                        'order_price': 100.0, 
+                        'order_price': 100.03, 
                         'direction': 1, 
                         'profit_price': 101.0, 
                         'loss_price': 99.0, 
@@ -143,10 +146,10 @@ class TestTechnicalIndicators:
         [
             [
                 1,
-                ['2022-10-20 02:00:00', 100.0, 102.5, 99.5, 100.0, 20, 20],
+                ['2022-10-20 02:00:00', 100.0, 102.5, 99.5, 100.0, 3, 20, 20],
                 [{
                     'order_time': '2022-10-20 01:00:00', 
-                    'order_price': 100.0, 
+                    'order_price': 100.03, 
                     'direction': 1, 
                     'profit_price': 101.0, 
                     'loss_price': 99.0, 
@@ -155,10 +158,10 @@ class TestTechnicalIndicators:
                     'result': 1}]],
             [
                 1,
-                ['2022-10-20 02:00:00', 100.0, 102.5, 98.5, 100.0, 20, 20],
+                ['2022-10-20 02:00:00', 100.0, 102.5, 98.5, 100.0, 3, 20, 20],
                 [{
                     'order_time': '2022-10-20 01:00:00', 
-                    'order_price': 100.0, 
+                    'order_price': 100.03, 
                     'direction': 1, 
                     'profit_price': 101.0, 
                     'loss_price': 99.0, 
@@ -167,11 +170,11 @@ class TestTechnicalIndicators:
                     'result': -1}]],
             [
                 1,
-                ['2022-10-20 02:00:00', 100.0, 100.5, 99.5, 100.0, 20, 20],
+                ['2022-10-20 02:00:00', 100.0, 100.5, 99.5, 100.0, 3, 20, 20],
                 []],
             [
                 -1,
-                ['2022-10-20 02:00:00', 100.0, 100.5, 98.5, 100.0, 20, 20],
+                ['2022-10-20 02:00:00', 100.0, 100.5, 98.5, 100.0, 3, 20, 20],
                 [{
                     'order_time': '2022-10-20 01:00:00', 
                     'order_price': 100.0, 
@@ -179,11 +182,11 @@ class TestTechnicalIndicators:
                     'profit_price': 99.0, 
                     'loss_price': 101.0, 
                     'settlement_time': '2022-10-20 02:00:00', 
-                    'settlement_price': 98.5, 
+                    'settlement_price': 98.53, 
                     'result': 1}]],
             [
                 -1,
-                ['2022-10-20 02:00:00', 100.0, 102.5, 98.5, 100.0, 20, 20],
+                ['2022-10-20 02:00:00', 100.0, 102.5, 98.5, 100.0, 3, 20, 20],
                 [{
                     'order_time': '2022-10-20 01:00:00', 
                     'order_price': 100.0, 
@@ -191,11 +194,11 @@ class TestTechnicalIndicators:
                     'profit_price': 99.0, 
                     'loss_price': 101.0, 
                     'settlement_time': '2022-10-20 02:00:00', 
-                    'settlement_price': 102.5, 
+                    'settlement_price': 102.53, 
                     'result': -1}]],
             [
                 -1,
-                ['2022-10-20 02:00:00', 100.0, 100.5, 99.5, 100.0, 20, 20],
+                ['2022-10-20 02:00:00', 100.0, 100.5, 99.5, 100.0, 3, 20, 20],
                 []]])
     def test_settlement(self, direction, data, expect):
         self.back.order(data=self.df.loc[0], direction=direction)
@@ -204,6 +207,7 @@ class TestTechnicalIndicators:
         
         self.back.settlement(data=ser)
 
+        print(self.back.settlements)
         assert self.back.settlements == expect
 
     def test_performance(self):
