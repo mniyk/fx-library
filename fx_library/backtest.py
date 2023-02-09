@@ -2,6 +2,7 @@
 """
 
 
+from datetime import datetime
 from typing import Dict
 
 import pandas as pd
@@ -14,7 +15,10 @@ class Backtest:
     def __init__(
         self, 
         df: DataFrame,
+        trade_start_hour: int,
+        trade_end_hour: int,
         time_column: str, 
+        open_column: str,
         close_column: str, 
         high_column: str, 
         low_column: str, 
@@ -22,12 +26,17 @@ class Backtest:
         order_count: int, 
         profit: int, 
         loss: int,
+        trail_stop: bool,
+        spread_threshold: int,
         pip: float) -> None:
         """初期化
 
         Args:
             df (DataFrame): ローソク足データ
+            trade_start_hour (int): トレード開始時間,
+            trade_end_hour (int): トレード終了時間,
             time_column (str): 日時の列名
+            open_column (str): 始値の列名
             close_column (str): 終値の列名
             high_column (str): 高値の列名
             low_column (str): 安値の列名
@@ -35,22 +44,33 @@ class Backtest:
             order_count (int): 注文数
             profit (int): 利益
             loss (int): 損失
+            trail_stop (bool): トレーリングストップ
+            spread_threshold (int): スプレッドの閾値
             pip (float): pip単位
 
         Examples:
             >>> back = Backtest(
                     df=df, 
+                    trade_start_hour=9,
+                    trade_end_hour=16,
                     time_column='time', 
+                    open_column='open', 
                     close_column='close', 
                     high_column='high', 
                     low_column='low', 
+                    spread_column='spread', 
                     order_count=1, 
                     profit=10, 
                     loss=10, 
+                    trail_stop=True, 
+                    spread_threshold=10,
                     pip=0.01)
         """
         self.df = df
+        self.trade_start_hour = trade_start_hour
+        self.trade_end_hour = trade_end_hour
         self.time_column = time_column
+        self.open_column = open_column
         self.close_column = close_column
         self.high_column = high_column
         self.low_column = low_column
@@ -58,12 +78,15 @@ class Backtest:
         self.order_count = order_count
         self.profit = profit
         self.loss = loss
+        self.trail_stop = trail_stop
+        self.spread_threshold = spread_threshold
         self.pip = pip
         self.orders = {'ask': [], 'bid': []}
         self.settlements = []
         self.result_df = None
 
         self.time_index = df.columns.get_loc(self.time_column)
+        self.open_index = df.columns.get_loc(self.open_column)
         self.close_index = df.columns.get_loc(self.close_column)
         self.high_index = df.columns.get_loc(self.high_column)
         self.low_index = df.columns.get_loc(self.low_column)
@@ -90,18 +113,25 @@ class Backtest:
         columns = self.df.columns
 
         for data in self.df.values:
-            self.settlement(data)
+            dt = datetime.strptime(data[self.time_index], '%Y-%m-%d %H:%M:%S')
 
-            if kwargs:
-                direction = func(data, columns, **kwargs)
+            if dt.hour >= self.trade_end_hour:
+                self.settlement(data=data, all=True)
             else:
-                direction = func(data, columns)
+                self.settlement(data=data)
 
-            if direction != 0:
-                self.order(data, direction)
+            if  self.trade_start_hour <= dt.hour < self.trade_end_hour:
+                if data[self.spread_index] <= self.spread_threshold:
+                    if kwargs:
+                        direction = func(data, columns, **kwargs)
+                    else:
+                        direction = func(data, columns)
 
-                if reverse_order:
-                    self.order(data, direction * -1)
+                    if direction != 0:
+                        self.order(data, direction)
+
+                        if reverse_order:
+                            self.order(data, direction * -1)
 
         if self.result_df is None:
             self.result_df = pd.DataFrame.from_dict(self.settlements)
@@ -147,7 +177,7 @@ class Backtest:
 
                 self.orders['bid'].append(result)
 
-    def settlement(self, data: Series) -> None:
+    def settlement(self, data: Series, all: bool=False) -> None:
         """決済
 
         Args:
@@ -155,44 +185,69 @@ class Backtest:
         """
         spread = data[self.spread_index] * self.pip     
 
+        open_price = data[self.open_index]
         high_price = data[self.high_index]
         low_price = data[self.low_index]
 
         for key in self.orders:
             for i in range(len(self.orders[key]) - 1, -1, -1):
-                result = 0
+                result = None 
 
+                order_price = self.orders[key][i]['order_price']
                 profit_price = self.orders[key][i]['profit_price']
                 loss_price = self.orders[key][i]['loss_price']
                 
                 if key == 'ask':
-                    if loss_price >= low_price:
-                        settlement_price = low_price
-                        result = -1
+                    if all:
+                        settlement_price = open_price
+                        result = settlement_price - order_price
                     else:
-                        if profit_price < high_price:
-                            settlement_price = high_price
-                            result = 1
+                        if loss_price >= low_price:
+                            settlement_price = low_price
+                            result = -1 * self.loss
+                        else:
+                            if profit_price < high_price:
+                                settlement_price = high_price
+                                result = 1 * self.profit
+                    
+                    if result is None:
+                        loss_pip = self.loss * self.pip                        
+
+                        if self.trail_stop:
+                            loss_price = high_price - loss_pip
+                            self.orders[key][i]['loss_price'] = loss_price
                 elif key == 'bid':
+                    order_price = order_price + spread
                     high_price = high_price + spread
                     low_price = low_price + spread
 
-                    if loss_price <= high_price:
-                        settlement_price = high_price
-                        result = -1
+                    if all:
+                        settlement_price = open_price + spread
+                        result = order_price - settlement_price
                     else:
-                        if profit_price > low_price:
-                            settlement_price = low_price
-                            result = 1
+                        if loss_price <= high_price:
+                            settlement_price = high_price
+                            result = -1 * self.loss
+                        else:
+                            if profit_price > low_price:
+                                settlement_price = low_price
+                                result = 1 * self.profit
+                    
+                    if result is None:
+                        loss_pip = self.loss * self.pip                        
+
+                        if self.trail_stop:
+                            loss_price = low_price + loss_pip
+                            self.orders[key][i]['loss_price'] = loss_price
                 
-                if result != 0:
+                if result is not None:
                     self.orders[
                         key][i]['settlement_time'] = data[self.time_index]
                     self.orders[key][i]['settlement_price'] = settlement_price
                     self.orders[key][i]['result'] = result
 
                     self.settlements.append(self.orders[key].pop(i))
-    
+        
     @classmethod
     def performance(
         cls, backtest_df: DataFrame, profit: int, loss: int) -> Dict:
