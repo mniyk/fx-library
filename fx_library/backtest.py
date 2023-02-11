@@ -360,16 +360,20 @@ class Backtest:
         count_df = count_df.rename(
             columns={'result_x': 'profit_count', 'result_y': 'loss_count'})
         count_df = count_df.fillna({'profit_count': 0, 'loss_count': 0})
-        count_df['total_count'] = 0
         count_df['total_count'] = (
             count_df['profit_count'] + count_df['loss_count'])
-        count_df['profit_rate'] = 0
         count_df['profit_rate'] = round(
             (count_df['profit_count'] / count_df['total_count']) * 100, 0)
 
         merge_df = pd.merge(
             sum_df, count_df, how='outer', left_index=True, right_index=True)
 
+        merge_df = merge_df.fillna(
+            {
+                'profit_count': 0, 
+                'loss_count': 0, 
+                'total_count': 0, 
+                'profit_rate': 0})
         merge_df = merge_df.reset_index()
 
         return merge_df.to_dict(orient='records')
