@@ -2,7 +2,6 @@
 """
 
 
-from datetime import datetime
 from typing import Dict
 
 import pandas as pd
@@ -113,14 +112,12 @@ class Backtest:
         columns = self.df.columns
 
         for data in self.df.values:
-            dt = datetime.strptime(data[self.time_index], '%Y-%m-%d %H:%M:%S')
-
-            if dt.hour >= self.trade_end_hour:
+            if data[self.time_index].hour >= self.trade_end_hour:
                 self.settlement(data=data, all=True)
             else:
                 self.settlement(data=data)
 
-            if  self.trade_start_hour <= dt.hour < self.trade_end_hour:
+            if  self.trade_start_hour <= data[self.time_index].hour < self.trade_end_hour:
                 if data[self.spread_index] <= self.spread_threshold:
                     if kwargs:
                         direction = func(data, columns, **kwargs)
@@ -138,6 +135,8 @@ class Backtest:
         else:
             self.result_df = self.join_dfs(
                 [self.result_df, pd.DataFrame.from_dict(self.settlements)])
+        
+        self.result_df = self.result_df.sort_values('order_time')
 
     def order(self, data: Series, direction: int) -> None:
         """発注
@@ -147,7 +146,7 @@ class Backtest:
             direction (int): 売買方向
         """
         close_price = data[self.close_index]
-        spread = data[self.spread_index] * self.pip     
+        spread = data[self.spread_index] * self.pip * 0.1
 
         order_price = close_price + spread if direction == 1 else close_price
         
@@ -166,14 +165,14 @@ class Backtest:
 
         if direction == 1:
             if len(self.orders['ask']) < self.order_count:
-                result['profit_price'] = close_price + profit_pip
-                result['loss_price'] = close_price - loss_pip
+                result['profit_price'] = order_price + profit_pip
+                result['loss_price'] = order_price - loss_pip
 
                 self.orders['ask'].append(result)
         elif direction == -1:
             if len(self.orders['bid']) < self.order_count:
-                result['profit_price'] = close_price - profit_pip
-                result['loss_price'] = close_price + loss_pip
+                result['profit_price'] = order_price - profit_pip
+                result['loss_price'] = order_price + loss_pip
 
                 self.orders['bid'].append(result)
 
@@ -183,7 +182,7 @@ class Backtest:
         Args:
             data (Series): ローソク足データ
         """
-        spread = data[self.spread_index] * self.pip     
+        spread = data[self.spread_index] * self.pip * 0.1
 
         open_price = data[self.open_index]
         high_price = data[self.high_index]
@@ -200,34 +199,45 @@ class Backtest:
                 if key == 'ask':
                     if all:
                         settlement_price = open_price
-                        result = settlement_price - order_price
+                        result = round(
+                            (settlement_price - order_price) / self.pip, 2)
                     else:
                         if loss_price >= low_price:
-                            settlement_price = low_price
-                            result = -1 * self.loss
+                            settlement_price = low_price 
+                            result = round(
+                                (loss_price - order_price) / self.pip, 2)
+                            
+                            if abs(result) >= self.loss:
+                                result = -1 * self.loss
                         else:
                             if profit_price < high_price:
                                 settlement_price = high_price
                                 result = 1 * self.profit
                     
                     if result is None:
-                        loss_pip = self.loss * self.pip                        
+                        loss_pip = self.loss * self.pip
 
                         if self.trail_stop:
-                            loss_price = high_price - loss_pip
-                            self.orders[key][i]['loss_price'] = loss_price
+                            if loss_price < high_price - loss_pip:
+                                loss_price = high_price - loss_pip
+                                self.orders[key][i]['loss_price'] = loss_price
                 elif key == 'bid':
-                    order_price = order_price + spread
+                    order_price = order_price
                     high_price = high_price + spread
                     low_price = low_price + spread
 
                     if all:
                         settlement_price = open_price + spread
-                        result = order_price - settlement_price
+                        result = round(
+                            (order_price - settlement_price) / self.pip, 2)
                     else:
                         if loss_price <= high_price:
                             settlement_price = high_price
-                            result = -1 * self.loss
+                            result = round(
+                                (order_price - loss_price) / self.pip, 2)
+
+                            if abs(result) >= self.loss:
+                                result = -1 * self.loss
                         else:
                             if profit_price > low_price:
                                 settlement_price = low_price
@@ -237,8 +247,9 @@ class Backtest:
                         loss_pip = self.loss * self.pip                        
 
                         if self.trail_stop:
-                            loss_price = low_price + loss_pip
-                            self.orders[key][i]['loss_price'] = loss_price
+                            if loss_price > low_price + loss_pip:
+                                loss_price = low_price + loss_pip
+                                self.orders[key][i]['loss_price'] = loss_price
                 
                 if result is not None:
                     self.orders[
@@ -266,19 +277,17 @@ class Backtest:
                     backtest_df=back.result_df, profit=10, loss=10)
         """
         profit_count = backtest_df[
-            backtest_df['result'] == 1]['result'].count()
+            backtest_df['result'] > 0]['result'].count()
         loss_count = backtest_df[
-            backtest_df['result'] == -1]['result'].count()
+            backtest_df['result'] < 0]['result'].count()
 
         total_count = profit_count + loss_count
 
         profit_rate = round((profit_count / total_count) * 100, 0)
 
-        profit_and_loss = (
-            (profit_count * profit) - (loss_count * loss))
+        profit_and_loss = backtest_df['result'].sum()
         
-        detail_data = cls.detail_performance(
-            cls, df=backtest_df, profit=profit, loss=loss)
+        detail_data = cls.detail_performance(cls, df=backtest_df)
 
         return {
             'total_count': total_count,
@@ -290,36 +299,32 @@ class Backtest:
             'loss': loss,
             'detail': detail_data}
     
-    def detail_performance(self, df: DataFrame, profit: int, loss: int):
+    def detail_performance(self, df: DataFrame):
         """実績の詳細
 
         Args:
             df (DataFrame): バックテスト結果のデーフレーム
-            profit (int): 利益
-            loss (int): 損失
             
         Returns:
             Dict: 実績の詳細
 
         Examples:
-            >>> detail_data = self.detail_performance(
-                    self, df=backtest_df, profit=10, loss=10)
+            >>> detail_data = self.detail_performance(self, df=backtest_df)
         """
         df['order_time'] = pd.to_datetime(df['order_time'])
 
         df['year'] = df['order_time'].dt.year
         df['month'] = df['order_time'].dt.month
         df['week'] = df['order_time'].dt.isocalendar().week
-
-        df.loc[:, 'profit_and_loss'] = 0 
-        df.loc[df['result'] >= 1, 'profit_and_loss'] = profit
-        df.loc[df['result'] <= -1, 'profit_and_loss'] = loss * -1
+        df['day'] = df['order_time'].dt.day
 
         detail_data = {
             'year': self.calculation_detail(df=df, group_list=['year']),
             'month': self.calculation_detail(
                 df=df, group_list=['year', 'month']),
-            'week': self.calculation_detail(df=df, group_list=['year', 'week'])}
+            'week': self.calculation_detail(df=df, group_list=['year', 'week']),
+            'day': self.calculation_detail(
+                df=df, group_list=['year', 'month', 'day'])}
 
         return detail_data
     
@@ -338,10 +343,10 @@ class Backtest:
             >>> self.calculation_detail(df=df, group_list=['year', 'month'])
         """
         group = df.groupby(group_list)
-        profit_group = df.loc[df['result'] >= 1].groupby(group_list)
-        loss_group = df.loc[df['result'] <= -1].groupby(group_list)
+        profit_group = df.loc[df['result'] > 0].groupby(group_list)
+        loss_group = df.loc[df['result'] < 0].groupby(group_list)
 
-        sum_df = group.sum('profit_and_loss')['profit_and_loss']
+        sum_df = group.sum('result')['result']
         profit_count_df = profit_group.count()['result']
         loss_count_df = loss_group.count()['result']
 

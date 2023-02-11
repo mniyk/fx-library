@@ -156,14 +156,20 @@ Package for backtest
 
  # Backtestインスタンスの作成
  back = Backtest(
-     df=df,
-     time_column='time',
+     df=df, 
+     trade_start_hour=9,
+     trade_end_hour=16,
+     time_column='time', 
+     open_column='open', 
      close_column='close', 
      high_column='high', 
      low_column='low', 
+     spread_column='spread', 
      order_count=1, 
      profit=10, 
      loss=10, 
+     trail_stop=True, 
+     spread_threshold=10,
      pip=0.01)
 
  # バックテストの実行
