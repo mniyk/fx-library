@@ -285,7 +285,7 @@ class Backtest:
 
         profit_rate = round((profit_count / total_count) * 100, 0)
 
-        profit_and_loss = backtest_df['result'].sum()
+        result = backtest_df['result'].sum()
         
         detail_data = cls.detail_performance(cls, df=backtest_df)
 
@@ -294,7 +294,7 @@ class Backtest:
             'profit_count': profit_count,
             'loss_count': loss_count,
             'profit_rate': profit_rate,
-            'profit_and_loss': profit_and_loss,
+            'result': result,
             'profit': profit,
             'loss': loss,
             'detail': detail_data}
