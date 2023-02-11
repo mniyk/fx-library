@@ -4,7 +4,7 @@ import setuptools
 setuptools.setup(
     name='fx-library',
     description='FX related library with Pyrhon',
-    version='2.0.2',
+    version='2.0.3',
     author='mniyk',
     author_email='my.name.is.yohei.kono@gmail.com',
     url='https://github.com/mniyk/fx-library.git',
