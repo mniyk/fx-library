@@ -245,15 +245,58 @@ class Mt5:
         Examples:
             >>> positions = app.get_positions(symbol='USDJPY)
             >>> positions = app.get_positions(ticket=order['order'])
+            >>> positions = app.get_positions()
         """
         if symbol:
             response = MetaTrader5.positions_get(symbol=symbol.upper())
         elif ticket:
             response = MetaTrader5.positions_get(ticket=ticket)
+        else:
+            response = MetaTrader5.positions_get()
 
         positions = [data._asdict() for data in response]
 
         return positions
+    
+    def close_positions(self, symbol: str=None, ticket: int=None) -> List:
+        """ポジションの決済
+
+        Args:
+            symbol (str): 通貨ペア
+            ticket (int): チケット
+
+        Returns:
+            List: 決済のリスト
+
+        Examples:
+            >>> positions = app.close_positions(symbol='USDJPY)
+            >>> positions = app.close_positions(ticket=order['order'])
+            >>> positions = app.close_positions()
+        """
+        result = []
+
+        positions = self.get_positions(symbol=symbol, ticket=ticket)
+
+        for position in positions:
+            order_type = (
+                MetaTrader5.ORDER_TYPE_SELL 
+                if position['type'] == MetaTrader5.ORDER_TYPE_BUY else 
+                MetaTrader5.ORDER_TYPE_BUY)
+            
+            request = {
+                'action': MetaTrader5.TRADE_ACTION_DEAL,
+                'symbol': position['symbol'],
+                'volume': position['volume'],
+                'position': position['ticket'],
+                'type': order_type,
+                'type_time': MetaTrader5.ORDER_TIME_GTC,
+                'type_filling': MetaTrader5.ORDER_FILLING_IOC}
+
+            order = MetaTrader5.order_send(request)._asdict()
+            
+            result.append(order)
+        
+        return result
 
     def get_history_orders(
         self, from_datetime: datetime, to_datetime: datetime) -> List:
