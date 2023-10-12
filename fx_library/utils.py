@@ -20,10 +20,10 @@ def direction_by_value_range(data, columns, **kwargs):
         index = columns.get_loc(k)
         val = data[index]
 
-        if v['ask'][0] <= val < v['ask'][1]:
+        if v['ask'][0] < val <= v['ask'][1]:
             direction = 1
                 
-        if v['bid'][0] >= val > v['bid'][1]:
+        if v['bid'][0] > val >= v['bid'][1]:
             direction = -1
 
         directions.append(direction)
@@ -38,8 +38,5 @@ def direction_by_value_range(data, columns, **kwargs):
             result = 1
         elif sum(directions) < 0:
             result = -1
-
-    if kwargs['backtest']:
-        return result
     
     return result, log_direcctions

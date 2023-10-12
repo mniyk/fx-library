@@ -33,16 +33,13 @@ Package for operating MetaTrader5
 
  # ローソク足データの取得
  from_datetime = datetime.now() + timedelta(days=5)
-
- candles = app.get_candles(
-     symbol='USDJPY', timeframe='H1', from_datetime=from_datetime, data_count=5)
+ candles       = app.get_candles(symbol='USDJPY', timeframe='H1', from_datetime=from_datetime, data_count=5)
  
  # 発注
  order = app.send_order(symbol='USDJPY', lot=0.1, direction=1, magic=0)
  
  # 指値と逆指値の送信
- order = app.send_profit_and_loss(
-     ticket=order['order'], profit=100, loss=100, pip=0.01)
+ order = app.send_profit_and_loss(ticket=order['order'], profit=100, loss=100, pip=0.01)
  
  # ポジションの取得
  positions = app.get_positions(symbol='USDJPY')
@@ -50,14 +47,12 @@ Package for operating MetaTrader5
  
  # 注文履歴を取得
  from_datetime = datetime.now() - timedelta(days=365)
- to_datetime = datetime.now() + timedelta(days=5)
+ to_datetime   = datetime.now() + timedelta(days=5)
 
- history_orders = app.get_history_orders(
-     from_datetime=from_datetime, to_datetime=to_datetime)
+ history_orders = app.get_history_orders(from_datetime=from_datetime, to_datetime=to_datetime)
 
  # 取引履歴を取得
- history_deals = app.get_history_deals(
-     from_datetime=from_datetime, to_datetime=to_datetime)
+ history_deals = app.get_history_deals(from_datetime=from_datetime, to_datetime=to_datetime)
  
  # 切断
  app.disconnect()
@@ -87,9 +82,7 @@ Package for creating technical indicators
 
  # ローソク足データの取得
  from_datetime = datetime.now() + timedelta(days=5)
-
- candles = app.get_candles(
-     symbol='USDJPY', timeframe='H1', from_datetime=from_datetime, data_count=5)
+ candles       = app.get_candles(symbol='USDJPY', timeframe='H1', from_datetime=from_datetime, data_count=5)
  
  df = pd.DataFrame(candles)
 
@@ -97,8 +90,7 @@ Package for creating technical indicators
  df = Tech.calculation_ema(df=df, calculation_column='close', period=12)
  
  # MACDの計算
- df = Tech.calculation_macd(
-     df=df, calculation_column='close', short=12, long=26, signal=9)
+ df = Tech.calculation_macd(df=df, calculation_column='close', short=12, long=26, signal=9)
 
  # RCIの計算
  df = Tech.calculation_rci(df=df, calculation_column='close', period=12)
@@ -110,8 +102,7 @@ Package for creating technical indicators
  df = Tech.calculation_stochastics(df=df, calculation_column='close', period=12)
 
  # 前回値と前回値との差を追加
- df = Tech.add_previous_value_shift_and_diff( 
-     df=df, technical_indicator_name='rci')
+ df = Tech.add_previous_value_shift_and_diff(df=df, technical_indicator_name='rci')
 
  # 切断
  app.disconnect()
@@ -130,7 +121,7 @@ Package for backtest
 
  from fx_library.mt5 import Mt5
  from fx_library.technical_indicators import TechnicalIndicators as Tech
- from fx_library.backtest import Backtest
+ from fx_library.backtest import Backtest, HourPeriod, CandleColumn, BacktestParameter, Performance
 
 
  # MT5インスタンスの作成
@@ -141,9 +132,7 @@ Package for backtest
 
  # ローソク足データの取得
  from_datetime = datetime.now() + timedelta(days=5)
-
- candles = app.get_candles(
-     symbol='USDJPY', timeframe='H1', from_datetime=from_datetime, data_count=5)
+ candles       = app.get_candles(symbol='USDJPY', timeframe='H1', from_datetime=from_datetime, data_count=5)
  
  df = pd.DataFrame(candles)
 
@@ -151,39 +140,43 @@ Package for backtest
  df = Tech.calculation_rci(df=df, calculation_column='close', period=12)
 
  # 前回値と前回値との差を追加
- df = Tech.add_previous_value_shift_and_diff( 
-     df=df, technical_indicator_name='rci')
+ df = Tech.add_previous_value_shift_and_diff(df=df, technical_indicator_name='rci')
 
  # Backtestインスタンスの作成
+ hour_period   = HourPeriod(start=0, end=24)
+ candle_column = CandleColumn(
+     time_column  ='time',
+     open_column  ='open',
+     high_column  ='high',
+     low_column   ='low',
+     close_column ='close',
+     spread_column='spread')
+ backtest_parameter = BacktestParameter(
+     hour_period     =hour_period,
+     candle_column   =candle_column,
+     position_count  =1,
+     profit          =100,
+     loss            =100,
+     trail_stop      =True,
+     spread_threshold=50,
+     pip             =0.01,
+     reverse_order   =False)
  back = Backtest(
-     df=df, 
-     trade_start_hour=9,
-     trade_end_hour=16,
-     time_column='time', 
-     open_column='open', 
-     close_column='close', 
-     high_column='high', 
-     low_column='low', 
-     spread_column='spread', 
-     order_count=1, 
-     profit=10, 
-     loss=10, 
-     trail_stop=True, 
-     spread_threshold=10,
-     pip=0.01)
+     df       =df, 
+     parameter=backtest_parameter)
 
  # バックテストの実行
  back.run(
-     func=direction_by_value_range, 
+     func         =direction_by_value_range, 
      reverse_order=reverse_order, 
-     ranges={
+     ranges       ={
          'rci_12': {'ask': [80, 100], 'bid': [-80, -100]},
          'rci_12_shift_diff': {'ask': [0, 100], 'bid': [0, -100]}},
-     backtest=True)
+     backtest     =True)
 
  # 実績
- performance_result = Backtest.performance(
-     back.result_df, profit=profit, loss=loss)
+ performance = Performance(back.result_df, backtest_parameter)
+ result      = performance.performance()
 
  # 切断
  app.disconnect()
