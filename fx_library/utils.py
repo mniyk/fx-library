@@ -98,7 +98,7 @@ def one_direction_ranges(direction_ranges):
     key_list = list(direction_ranges.keys())
 
     for one_ranges in direction_ranges[key_list[0]]:
-        result.append({key_list[0]: one_ranges})
+        result.append({"ranges": {key_list[0]: one_ranges}})
 
     return result
 
@@ -110,7 +110,7 @@ def two_direction_ranges(direction_ranges):
 
     for one_ranges in direction_ranges[key_list[0]]:
         for two_ranges in direction_ranges[key_list[1]]:
-            result.append({key_list[0]: one_ranges, key_list[1]: two_ranges})
+            result.append({"ranges": {key_list[0]: one_ranges, key_list[1]: two_ranges}})
 
     return result
 
@@ -123,8 +123,12 @@ def three_direction_ranges(direction_ranges):
     for one_ranges in direction_ranges[key_list[0]]:
         for two_ranges in direction_ranges[key_list[1]]:
             for three_ranges in direction_ranges[key_list[2]]:
-                result.append({
-                    key_list[0]: one_ranges, key_list[1]: two_ranges, key_list[2]: three_ranges})
+                result.append(
+                    {
+                        "ranges": {
+                            key_list[0]: one_ranges, 
+                            key_list[1]: two_ranges, 
+                            key_list[2]: three_ranges}})
 
     return result
 
@@ -138,49 +142,50 @@ def four_direction_ranges(direction_ranges):
         for two_ranges in direction_ranges[key_list[1]]:
             for three_ranges in direction_ranges[key_list[2]]:
                 for four_ranges in direction_ranges[key_list[3]]:
-                    result.append({
-                        key_list[0]: one_ranges, 
-                        key_list[1]: two_ranges,
-                        key_list[2]: three_ranges,
-                        key_list[3]: four_ranges})
+                    result.append(
+                        {
+                            "ranges": {
+                                key_list[0]: one_ranges, 
+                                key_list[1]: two_ranges,
+                                key_list[2]: three_ranges,
+                                key_list[3]: four_ranges}})
 
     return result
 
 
-def create_backtest_parameters_from_json(symbol, json_data, direction_function):
+def create_backtest_parameters_from_json(symbol, direction_parameter, json_data, direction_function):
     parameters = []
 
     profit_loss = create_profit_loss(
         json_data['profit_loss']['min'], json_data['profit_loss']['max'], json_data['profit_loss']['increase'])
 
-    for direction_parameter in json_data['direction_parameters']:
-        direction_ranges = create_direction_ranges(direction_parameter)
+    direction_ranges = create_direction_ranges(direction_parameter)
 
-        for direction_range in direction_ranges:
-            for profit, loss in profit_loss:
-                parameter = Parameter(
-                    symbol             =symbol,
-                    timeframes         =json_data['timeframes'],
-                    technical_indicator=json_data['technical_indicator'],
-                    direction_function =direction_function,
-                    direction_parameter=direction_range,
-                    start              =json_data['start'],
-                    end                =json_data['end'],
-                    position_count     =json_data['position_count'],
-                    profit             =profit,
-                    loss               =loss,
-                    trail_stop         =json_data['trail_stop'],
-                    spread_threshold   =json_data['spread_threshold'],
-                    pip                =PIPS[symbol],
-                    reverse_order      =json_data['reverse_order'],
-                    time_column        =json_data['columns']['time'],
-                    open_column        =json_data['columns']['open'],
-                    high_column        =json_data['columns']['high'],
-                    low_column         =json_data['columns']['low'],
-                    close_column       =json_data['columns']['close'],
-                    spread_column      =json_data['columns']['spread'],
-                    technical_column   =json_data['columns']['technical'])
-                
-                parameters.append(parameter)
+    for direction_range in direction_ranges:
+        for profit, loss in profit_loss:
+            parameter = Parameter(
+                symbol             =symbol,
+                timeframes         =json_data['timeframes'],
+                technical_indicator=json_data['technical_indicator'],
+                direction_function =direction_function,
+                direction_parameter=direction_range,
+                start              =json_data['start'],
+                end                =json_data['end'],
+                position_count     =json_data['position_count'],
+                profit             =profit,
+                loss               =loss,
+                trail_stop         =json_data['trail_stop'],
+                spread_threshold   =json_data['spread_threshold'],
+                pip                =PIPS[symbol],
+                reverse_order      =json_data['reverse_order'],
+                time_column        =json_data['columns']['time'],
+                open_column        =json_data['columns']['open'],
+                high_column        =json_data['columns']['high'],
+                low_column         =json_data['columns']['low'],
+                close_column       =json_data['columns']['close'],
+                spread_column      =json_data['columns']['spread'],
+                technical_column   =json_data['columns']['technical'])
+            
+            parameters.append(parameter)
     
     return parameters

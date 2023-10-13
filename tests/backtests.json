@@ -18,12 +18,12 @@
         "spread": "spread_under",
         "technical": "close"
     },
-    "select_columns": {
-        "M5": "time, open, high, low, close, spread, period_34, period_34_shift_diff",
-        "H1": "time, period_144, period_144_shift_diff"
-    },
     "direction_parameters": [
         {
+            "select_columns": {
+                "M5": "time, open, high, low, close, spread, period_34, period_34_shift_diff",
+                "H1": "time, period_144, period_144_shift_diff"
+            },
             "range_calculation": true,
             "ranges": {
                 "period_34_under": {

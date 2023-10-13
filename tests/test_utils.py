@@ -134,5 +134,6 @@ def test_create_backtest_parameters_from_json():
         settings_json = json.load(f)
 
     for symbol in settings_json['symbols']:
-        parameters = utils.create_backtest_parameters_from_json(
-            symbol, settings_json, utils.direction_by_value_range)
+        for direction_parameter in settings_json['direction_parameters']:
+            parameters = utils.create_backtest_parameters_from_json(
+                symbol, direction_parameter, settings_json, utils.direction_by_value_range)
