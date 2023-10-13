@@ -9,6 +9,8 @@ from typing import List, Dict
 import MetaTrader5
 
 
+PIPS = {"USDJPY": 0.01, "AUDJPY": 0.01, "GBPJPY": 0.01, "EURJPY": 0.01, "EURUSD": 0.0001}
+
 class RequestError(Exception):
     """MT5へのリクエスト時のエラー
     """

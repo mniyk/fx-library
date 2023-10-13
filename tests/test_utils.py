@@ -1,3 +1,5 @@
+import json
+
 import numpy  as np
 import pandas as pd
 import pytest
@@ -125,3 +127,12 @@ def test_direction_by_value_range(data, params, expect_result):
     result, _ = utils.direction_by_value_range(data, columns, **params)
 
     assert result == expect_result
+
+
+def test_create_backtest_parameters_from_json():
+    with open('./tests/backtests.json') as f:
+        settings_json = json.load(f)
+
+    for symbol in settings_json['symbols']:
+        parameters = utils.create_backtest_parameters_from_json(
+            symbol, settings_json, utils.direction_by_value_range)
