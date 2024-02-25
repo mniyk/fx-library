@@ -154,7 +154,7 @@ class Backtest:
             direction (int)    : 売買方向
         """
         ask_bid     = 'ask' if direction == 1 else 'bid'
-        spread      = data[self.spread_index] * self.parameter.pip * 0.1
+        spread      = data[self.spread_index]
         close_price = data[self.close_index]
         order_price = close_price + spread if direction == 1 else close_price
 

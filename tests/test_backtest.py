@@ -7,14 +7,14 @@ from fx_library import backtest, utils
 
 DIRECTION_PARAMETER = {
     'ranges': {
-        'period_34_under'           : {'ask': [0, 100], 'bid': [0, -100]},
         'period_34_shift_diff_under': {'ask': [0, 100], 'bid': [0, -100]},
-        'period_144_top'            : {'ask': [0, 100], 'bid': [0, -100]},
-        'period_144_shift_diff_top' : {'ask': [0, 100], 'bid': [0, -100]}}}
+        'period_144_shift_diff_top': {'ask': [0, 100], 'bid': [0, -100]},
+    }
+}
 PARAMETER = backtest.Parameter(
     symbol             ='USDJPY',
     timeframes         =['M5', 'H1'],
-    technical_indicator='rci',
+    technical_indicator='sma',
     direction_function =utils.direction_by_value_range,
     direction_parameter=DIRECTION_PARAMETER,
     start              =3,
@@ -23,7 +23,7 @@ PARAMETER = backtest.Parameter(
     profit             =100,
     loss               =100,
     trail_stop         =True,
-    spread_threshold   =50,
+    spread_threshold   =0.2,
     pip                =0.01,
     reverse_order      =False,
     time_column        ='time_under',
@@ -85,7 +85,7 @@ class TestBacktest:
             100.150,
             100.050,
             100.125,
-            3.0,
+            0.003,
             20.0,
             20.0,
             '2000-01-01 12:00:00',
@@ -107,7 +107,7 @@ class TestBacktest:
             100.150,
             100.050,
             100.125,
-            3.0,
+            0.003,
             20.0,
             20.0,
             '2000-01-01 12:00:00',
