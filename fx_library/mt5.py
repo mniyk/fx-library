@@ -9,7 +9,12 @@ from typing import List, Dict
 import MetaTrader5
 
 
-PIPS = {"USDJPY": 0.01, "AUDJPY": 0.01, "GBPJPY": 0.01, "EURJPY": 0.01, "EURUSD": 0.0001}
+PIPS = {
+    "USDJPY": 0.01, 
+    "AUDJPY": 0.01, 
+    "GBPJPY": 0.01, 
+    "EURJPY": 0.01, 
+    "EURUSD": 0.0001}
 
 class RequestError(Exception):
     """MT5へのリクエスト時のエラー
@@ -19,25 +24,25 @@ class RequestError(Exception):
 class Timeframes(Enum):
     """Mt5で使用可能な時間枠
     """
-    M1 = MetaTrader5.TIMEFRAME_M1
-    M2 = MetaTrader5.TIMEFRAME_M2
-    M3 = MetaTrader5.TIMEFRAME_M3
-    M4 = MetaTrader5.TIMEFRAME_M4
-    M5 = MetaTrader5.TIMEFRAME_M5
-    M6 = MetaTrader5.TIMEFRAME_M6
+    M1  = MetaTrader5.TIMEFRAME_M1
+    M2  = MetaTrader5.TIMEFRAME_M2
+    M3  = MetaTrader5.TIMEFRAME_M3
+    M4  = MetaTrader5.TIMEFRAME_M4
+    M5  = MetaTrader5.TIMEFRAME_M5
+    M6  = MetaTrader5.TIMEFRAME_M6
     M10 = MetaTrader5.TIMEFRAME_M10
     M12 = MetaTrader5.TIMEFRAME_M12
     M15 = MetaTrader5.TIMEFRAME_M15
     M20 = MetaTrader5.TIMEFRAME_M20
     M30 = MetaTrader5.TIMEFRAME_M30
-    H1 = MetaTrader5.TIMEFRAME_H1
-    H2 = MetaTrader5.TIMEFRAME_H2
-    H3 = MetaTrader5.TIMEFRAME_H3
-    H4 = MetaTrader5.TIMEFRAME_H4
-    H6 = MetaTrader5.TIMEFRAME_H6
-    H8 = MetaTrader5.TIMEFRAME_H8
+    H1  = MetaTrader5.TIMEFRAME_H1
+    H2  = MetaTrader5.TIMEFRAME_H2
+    H3  = MetaTrader5.TIMEFRAME_H3
+    H4  = MetaTrader5.TIMEFRAME_H4
+    H6  = MetaTrader5.TIMEFRAME_H6
+    H8  = MetaTrader5.TIMEFRAME_H8
     H12 = MetaTrader5.TIMEFRAME_H12
-    D = MetaTrader5.TIMEFRAME_D1
+    D   = MetaTrader5.TIMEFRAME_D1
 
 class Mt5:
     """MT5を使用するためのクラス
