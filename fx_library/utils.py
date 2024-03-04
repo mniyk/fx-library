@@ -3,14 +3,19 @@
 
 
 import itertools
+from typing      import Callable
 
 import numpy as np
+import pandas as pd
 
 from .backtest import Direction, Parameter
 from .mt5      import PIPS
 
 
-def direction_by_value_range(data, columns, **kwargs):
+def direction_by_value_range(
+    data: np.ndarray, 
+    columns: pd.core.indexes.base.Index, 
+    **kwargs: dict):
     """売買方向を値の範囲で決定
     
     **kwargsには、以下のような辞書を設定
@@ -50,7 +55,7 @@ def direction_by_value_range(data, columns, **kwargs):
     return result, log_direcctions
 
 
-def create_profit_loss(min_value, max_value, increase):
+def create_profit_loss(min_value: int, max_value: int, increase: int) -> list:
     """最小値と最大値から損益のペアを作成
     """
     profit_loss = range(min_value, max_value + increase, increase)
@@ -60,7 +65,7 @@ def create_profit_loss(min_value, max_value, increase):
     return profit_loss
 
 
-def create_direction_ranges(direction_range):
+def create_direction_ranges(direction_range: dict) -> list:
     """最小値と最大値、分割数から売買方向の範囲のリストを作成
     """
     direction_ranges = {}
@@ -104,7 +109,9 @@ def create_direction_ranges(direction_range):
     return direction_ranges
 
 
-def one_direction_ranges(direction_ranges):
+def one_direction_ranges(direction_ranges: dict) -> list:
+    """売買方向の範囲を作成(rangesのキーが1つの場合)
+    """
     result = []
 
     key_list = list(direction_ranges.keys())
@@ -115,7 +122,9 @@ def one_direction_ranges(direction_ranges):
     return result
 
 
-def two_direction_ranges(direction_ranges):
+def two_direction_ranges(direction_ranges: dict) -> list:
+    """売買方向の範囲を作成(rangesのキーが2つの場合)
+    """
     result = []
 
     key_list = list(direction_ranges.keys())
@@ -128,7 +137,9 @@ def two_direction_ranges(direction_ranges):
     return result
 
 
-def three_direction_ranges(direction_ranges):
+def three_direction_ranges(direction_ranges: dict) -> list:
+    """売買方向の範囲を作成(rangesのキーが3つの場合)
+    """
     result = []
 
     key_list = list(direction_ranges.keys())
@@ -146,7 +157,9 @@ def three_direction_ranges(direction_ranges):
     return result
 
 
-def four_direction_ranges(direction_ranges):
+def four_direction_ranges(direction_ranges: dict) -> list:
+    """売買方向の範囲を作成(rangesのキーが4つの場合)
+    """
     result = []
 
     key_list = list(direction_ranges.keys())
@@ -167,7 +180,12 @@ def four_direction_ranges(direction_ranges):
 
 
 def create_backtest_parameters_from_json(
-    symbol, direction_parameter, json_data, direction_function):
+    symbol: str, 
+    direction_parameter: dict, 
+    json_data: dict, 
+    direction_function: Callable) -> list:
+    """JSONからParameterインスタンスのリストを作成
+    """
     parameters = []
 
     profit_loss = create_profit_loss(
@@ -185,8 +203,8 @@ def create_backtest_parameters_from_json(
                 technical_indicator=json_data['technical_indicator'],
                 direction_function =direction_function,
                 direction_parameter=direction_range,
-                start              =json_data['start'],
-                end                =json_data['end'],
+                trade_start_hour   =json_data['trade_start_hour'],
+                trade_end_hour     =json_data['trade_end_hour'],
                 position_count     =json_data['position_count'],
                 profit             =profit,
                 loss               =loss,
