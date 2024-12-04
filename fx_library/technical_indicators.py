@@ -200,33 +200,33 @@ class TechnicalIndicators:
             >>> df = Tech.calculation_dmi(
                     df=df, calculation_column='close', period=12)
         """
-        df[f'prev_{calculation_column}'] = df[calculation_column].shift(1)
-        df['TR'] = np.maximum(
+        df[f'prev_{calculation_column}_{period}'] = df[calculation_column].shift(1)
+        df[f'TR_{period}'] = np.maximum(
             df['high'] - df['low'], 
             np.maximum(
                 abs(df['high'] - df['prev_close']), 
                 abs(df['low'] - df['prev_close'])))
 
-        df['+DM'] = np.where(
+        df[f'+DM_{period}'] = np.where(
             (df['high'] - df['high'].shift(1)) > (df['low'].shift(1) - df['low']), 
             np.maximum(df['high'] - df['high'].shift(1), 0),
             0)
-        df['-DM'] = np.where(
+        df[f'-DM_{period}'] = np.where(
             (df['low'].shift(1) - df['low']) > (df['high'] - df['high'].shift(1)), 
             np.maximum(df['low'].shift(1) - df['low'], 0), 
             0)
 
-        df['Smoothed_TR'] = df['TR'].ewm(span=period, adjust=False).mean()
-        df['Smoothed_+DM'] = df['+DM'].ewm(span=period, adjust=False).mean()
-        df['Smoothed_-DM'] = df['-DM'].ewm(span=period, adjust=False).mean()
+        df[f'Smoothed_TR_{period}'] = df[f'TR_{period}'].ewm(span=period, adjust=False).mean()
+        df[f'Smoothed_+DM_{period}'] = df[f'+DM_{period}'].ewm(span=period, adjust=False).mean()
+        df[f'Smoothed_-DM_{period}'] = df[f'-DM_{period}'].ewm(span=period, adjust=False).mean()
 
-        df['+DI'] = (df['Smoothed_+DM'] / df['Smoothed_TR']) * 100
-        df['-DI'] = (df['Smoothed_-DM'] / df['Smoothed_TR']) * 100
+        df[f'+DI_{period}'] = (df[f'Smoothed_+DM_{period}'] / df[f'Smoothed_TR_{period}']) * 100
+        df[f'-DI_{period}'] = (df[f'Smoothed_-DM_{period}'] / df[f'Smoothed_TR_{period}']) * 100
 
-        df['DX'] = (abs(df['+DI'] - df['-DI']) / (df['+DI'] + df['-DI'])) * 100
-        df['ADX'] = df['DX'].ewm(span=period, adjust=False).mean()
+        df[f'DX_{period}'] = (abs(df[f'+DI_{period}'] - df[f'-DI_{period}']) / (df[f'+DI_{period}'] + df[f'-DI_{period}'])) * 100
+        df[f'ADX_{period}'] = df[f'DX_{period}'].ewm(span=period, adjust=False).mean()
 
-        df[['+DI', '-DI', 'ADX']].dropna()
+        df[[f'+DI_{period}', f'-DI_{period}', f'ADX_{period}']].dropna()
 
         return df
 
