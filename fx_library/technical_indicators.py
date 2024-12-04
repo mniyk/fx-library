@@ -182,6 +182,53 @@ class TechnicalIndicators:
             df[calculation_column].values.tolist(), period).round(digits)
         
         return df
+    
+    @classmethod
+    def calculation_dmi(
+        cls, df: DataFrame, calculation_column: str, period: int):
+        """ストキャスティクスの計算
+
+        Args:
+            df (DataFrame): ローソク足のデータフレーム
+            calculation_column (str): 計算用の列名
+            period (int): 期間
+
+        Returns:
+            DataFrame: テクニカル指標を追加後のデータフレーム
+        
+        Examples:
+            >>> df = Tech.calculation_dmi(
+                    df=df, calculation_column='close', period=12)
+        """
+        df[f'prev_{calculation_column}'] = df[calculation_column].shift(1)
+        df['TR'] = np.maximum(
+            df['high'] - df['low'], 
+            np.maximum(
+                abs(df['high'] - df['prev_close']), 
+                abs(df['low'] - df['prev_close'])))
+
+        df['+DM'] = np.where(
+            (df['high'] - df['high'].shift(1)) > (df['low'].shift(1) - df['low']), 
+            np.maximum(df['high'] - df['high'].shift(1), 0),
+            0)
+        df['-DM'] = np.where(
+            (df['low'].shift(1) - df['low']) > (df['high'] - df['high'].shift(1)), 
+            np.maximum(df['low'].shift(1) - df['low'], 0), 
+            0)
+
+        df['Smoothed_TR'] = df['TR'].ewm(span=period, adjust=False).mean()
+        df['Smoothed_+DM'] = df['+DM'].ewm(span=period, adjust=False).mean()
+        df['Smoothed_-DM'] = df['-DM'].ewm(span=period, adjust=False).mean()
+
+        df['+DI'] = (df['Smoothed_+DM'] / df['Smoothed_TR']) * 100
+        df['-DI'] = (df['Smoothed_-DM'] / df['Smoothed_TR']) * 100
+
+        df['DX'] = (abs(df['+DI'] - df['-DI']) / (df['+DI'] + df['-DI'])) * 100
+        df['ADX'] = df['DX'].ewm(span=period, adjust=False).mean()
+
+        df[['+DI', '-DI', 'ADX']].dropna()
+
+        return df
 
     @classmethod
     def add_previous_value_shift_and_diff(
@@ -206,7 +253,7 @@ class TechnicalIndicators:
         """
         for column in df.columns:
             if technical_indicator_name in column:
-                df[f'{column}_shift'] = df[column].shift()
+                df[f'{column}_shift'] = df[column].shift(1)
 
                 if diff:
                     df[f'{column}_shift_diff'] = (
