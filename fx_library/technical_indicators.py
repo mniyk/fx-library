@@ -204,8 +204,8 @@ class TechnicalIndicators:
         df[f'TR_{period}'] = np.maximum(
             df['high'] - df['low'], 
             np.maximum(
-                abs(df['high'] - df['prev_close']), 
-                abs(df['low'] - df['prev_close'])))
+                abs(df['high'] - df[f'prev_{calculation_column}_{period}']), 
+                abs(df['low'] - df[f'prev_{calculation_column}_{period}'])))
 
         df[f'+DM_{period}'] = np.where(
             (df['high'] - df['high'].shift(1)) > (df['low'].shift(1) - df['low']), 
