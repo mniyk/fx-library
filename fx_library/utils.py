@@ -55,6 +55,32 @@ def direction_by_value_range(
     return result, log_direcctions
 
 
+def direction_ask(
+    data: np.ndarray, 
+    columns: pd.core.indexes.base.Index, 
+    **kwargs: dict):
+    """常に買方向
+
+    各引数は使用しない
+    """
+    result = Direction.ASK
+
+    return result, [{'val': None, 'ranges': None, 'direction': result}]
+
+
+def direction_bid(
+    data: np.ndarray, 
+    columns: pd.core.indexes.base.Index, 
+    **kwargs: dict):
+    """常に売方向
+
+    各引数は使用しない
+    """
+    result = Direction.BID
+
+    return result, [{'val': None, 'ranges': None, 'direction': result}]
+
+
 def create_profit_loss(min_value: int, max_value: int, increase: int) -> list:
     """最小値と最大値から損益のペアを作成
     """

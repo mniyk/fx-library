@@ -24,10 +24,10 @@ class TechnicalIndicators:
         """EMAの計算
         
         Args:
-            df (DataFrame): ローソク足のデータフレーム
-            calculation_column (str): 計算用の列名
-            period (int): 期間
-            digits (int): 小数点の桁数
+            df                 (DataFrame): ローソク足のデータフレーム
+            calculation_column (str)      : 計算用の列名
+            period             (int)      : 期間
+            digits             (int)      : 小数点の桁数
 
         Returns:
             DataFrame: テクニカル指標を追加後のデータフレーム
@@ -54,12 +54,12 @@ class TechnicalIndicators:
         """MACDの計算
 
         Args:
-            df (DataFrame): ローソク足のデータフレーム
-            calculation_column (str): 計算用の列名
-            short (int): 短期
-            long (int): 長期
-            signal (int): シグナル
-            digits (int): 小数点の桁数
+            df                 (DataFrame): ローソク足のデータフレーム
+            calculation_column (str)      : 計算用の列名
+            short              (int)      : 短期
+            long               (int)      : 長期
+            signal             (int)      : シグナル
+            digits             (int)      : 小数点の桁数
             
         Returns:
             DataFrame: テクニカル指標を追加後のデータフレーム
@@ -92,10 +92,10 @@ class TechnicalIndicators:
         """RCIの計算
 
         Args:
-            df (DataFrame): ローソク足のデータフレーム
-            calculation_column (str): 計算用の列名
-            period (int): 期間
-            digits (int): 小数点の桁数
+            df                 (DataFrame): ローソク足のデータフレーム
+            calculation_column (str)      : 計算用の列名
+            period             (int)      : 期間
+            digits             (int)      : 小数点の桁数
 
         Returns:
             DataFrame: テクニカル指標を追加後のデータフレーム
@@ -133,10 +133,10 @@ class TechnicalIndicators:
         """SMAの計算
         
         Args:
-            df (DataFrame): ローソク足のデータフレーム
-            calculation_column (str): 計算用の列名
-            period (int): 期間
-            digits (int): 小数点の桁数
+            df                 (DataFrame): ローソク足のデータフレーム
+            calculation_column (str)      : 計算用の列名
+            period             (int)      : 期間
+            digits             (int)      : 小数点の桁数
 
         Returns:
             DataFrame: テクニカル指標を追加後のデータフレーム
@@ -162,10 +162,10 @@ class TechnicalIndicators:
         """ストキャスティクスの計算
 
         Args:
-            df (DataFrame): ローソク足のデータフレーム
-            calculation_column (str): 計算用の列名
-            period (int): 期間
-            digits (int): 小数点の桁数
+            df                 (DataFrame): ローソク足のデータフレーム
+            calculation_column (str)      : 計算用の列名
+            period             (int)      : 期間
+            digits             (int)      : 小数点の桁数
 
         Returns:
             DataFrame: テクニカル指標を追加後のデータフレーム
@@ -186,12 +186,12 @@ class TechnicalIndicators:
     @classmethod
     def calculation_dmi(
         cls, df: DataFrame, calculation_column: str, period: int):
-        """ストキャスティクスの計算
+        """DMIの計算
 
         Args:
-            df (DataFrame): ローソク足のデータフレーム
-            calculation_column (str): 計算用の列名
-            period (int): 期間
+            df                 (DataFrame): ローソク足のデータフレーム
+            calculation_column (str)      : 計算用の列名
+            period             (int)      : 期間
 
         Returns:
             DataFrame: テクニカル指標を追加後のデータフレーム
@@ -223,7 +223,9 @@ class TechnicalIndicators:
         df[f'+DI_{period}'] = (df[f'Smoothed_+DM_{period}'] / df[f'Smoothed_TR_{period}']) * 100
         df[f'-DI_{period}'] = (df[f'Smoothed_-DM_{period}'] / df[f'Smoothed_TR_{period}']) * 100
 
-        df[f'DX_{period}'] = (abs(df[f'+DI_{period}'] - df[f'-DI_{period}']) / (df[f'+DI_{period}'] + df[f'-DI_{period}'])) * 100
+        df[f'DX_{period}'] = (
+            abs(df[f'+DI_{period}'] - df[f'-DI_{period}']) / (df[f'+DI_{period}'] + df[f'-DI_{period}'])
+        ) * 100
         df[f'ADX_{period}'] = df[f'DX_{period}'].ewm(span=period, adjust=False).mean()
 
         df[[f'+DI_{period}', f'-DI_{period}', f'ADX_{period}']].dropna()
@@ -240,9 +242,9 @@ class TechnicalIndicators:
         """前回値と前回値との差を追加
 
         Args:
-            df (DataFrame): ローソク足のデータフレーム
-            technical_indicator_name (str): テクニカル指標の名前
-            diff (bool): Trueであれば、前回値との差を追加
+            df                       (DataFrame): ローソク足のデータフレーム
+            technical_indicator_name (str)      : テクニカル指標の名前
+            diff                     (bool)     : Trueであれば、前回値との差を追加
         
         Returns:
             DataFrame: テクニカル指標を追加後のデータフレーム 
