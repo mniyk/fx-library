@@ -200,35 +200,29 @@ class TechnicalIndicators:
             >>> df = Tech.calculation_dmi(
                     df=df, calculation_column='close', period=12)
         """
-        df[f'prev_{calculation_column}_{period}'] = df[calculation_column].shift(1)
-        df[f'tr_{period}'] = np.maximum(
+        df[f'prev'] = df[calculation_column].shift(1)
+        df[f'tr'] = np.maximum(
             df['high'] - df['low'], 
-            np.maximum(
-                abs(df['high'] - df[f'prev_{calculation_column}_{period}']), 
-                abs(df['low'] - df[f'prev_{calculation_column}_{period}'])))
+            np.maximum(abs(df['high'] - df[f'prev']), abs(df['low'] - df[f'prev'])))
 
-        df[f'plus_dm_{period}'] = np.where(
+        df[f'plus_dm'] = np.where(
             (df['high'] - df['high'].shift(1)) > (df['low'].shift(1) - df['low']), 
             np.maximum(df['high'] - df['high'].shift(1), 0),
             0)
-        df[f'minus_dm_{period}'] = np.where(
+        df[f'minus_dm'] = np.where(
             (df['low'].shift(1) - df['low']) > (df['high'] - df['high'].shift(1)), 
             np.maximum(df['low'].shift(1) - df['low'], 0), 
             0)
 
-        df[f'smoothed_tr_{period}'] = df[f'tr_{period}'].ewm(span=period, adjust=False).mean()
-        df[f'smoothed_plus_dm_{period}'] = df[f'plus_dm_{period}'].ewm(span=period, adjust=False).mean()
-        df[f'smoothed_minus_dm_{period}'] = df[f'minus_dm_{period}'].ewm(span=period, adjust=False).mean()
+        df[f'smoothed_tr'] = df[f'tr'].ewm(span=period, adjust=False).mean()
+        df[f'smoothed_plus_dm'] = df[f'plus_dm'].ewm(span=period, adjust=False).mean()
+        df[f'smoothed_minus_dm'] = df[f'minus_dm'].ewm(span=period, adjust=False).mean()
 
-        df[f'plus_di_{period}'] = (df[f'smoothed_plus_dm_{period}'] / df[f'smoothed_tr_{period}']) * 100
-        df[f'minus_di_{period}'] = (df[f'smoothed_minus_dm_{period}'] / df[f'smoothed_tr_{period}']) * 100
+        df[f'plus_di'] = (df[f'smoothed_plus_dm'] / df[f'smoothed_tr']) * 100
+        df[f'minus_di'] = (df[f'smoothed_minus_dm'] / df[f'smoothed_tr']) * 100
 
-        df[f'dx_{period}'] = (
-            abs(df[f'plus_di_{period}'] - df[f'minus_di_{period}']) / (df[f'plus_di_{period}'] + df[f'minus_di_{period}'])
-        ) * 100
-        df[f'adx_{period}'] = df[f'dx_{period}'].ewm(span=period, adjust=False).mean()
-
-        df[[f'plus_di_{period}', f'minus_di_{period}', f'adx_{period}']].dropna()
+        df[f'dx'] = (abs(df[f'plus_di'] - df[f'minus_di']) / (df[f'plus_di'] + df[f'minus_di'])) * 100
+        df[f'adx'] = df[f'dx'].ewm(span=period, adjust=False).mean()
 
         return df
 
