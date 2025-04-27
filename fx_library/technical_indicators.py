@@ -157,7 +157,8 @@ class TechnicalIndicators:
         df: DataFrame, 
         calculation_column: str,
         period: int,
-        digits: int=4):
+        digits: int=4
+    ):
         """ストキャスティクスの計算
 
         Args:
@@ -173,12 +174,15 @@ class TechnicalIndicators:
             >>> df = Tech.calculation_stochastics(
                     df=df, calculation_column='close', period=12)
         """
-        df[f'stoch_k_{period}'] = percent_k(
-            df[calculation_column].values.tolist(), period).round(digits)
-        df[f'stoch_d_{period}'] = percent_d(
-            df[calculation_column].values.tolist(), period).round(digits)
-        df[f'stoch_rsi_{period}'] = stochrsi(
-            df[calculation_column].values.tolist(), period).round(digits)
+        df[f'stoch_k'] = percent_k(
+            df[calculation_column].values.tolist(), period
+        ).round(digits)
+        df[f'stoch_d'] = percent_d(
+            df[calculation_column].values.tolist(), period
+        ).round(digits)
+        df[f'stoch_rsi'] = stochrsi(
+            df[calculation_column].values.tolist(), period
+        ).round(digits)
         
         return df
     
