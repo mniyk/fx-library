@@ -50,16 +50,17 @@ class TechnicalIndicators:
         short: int, 
         long: int, 
         signal: int, 
-        digits: int=4):
+        digits: int=4
+    ):
         """MACDの計算
 
         Args:
-            df                 (DataFrame): ローソク足のデータフレーム
-            calculation_column (str)      : 計算用の列名
-            short              (int)      : 短期
-            long               (int)      : 長期
-            signal             (int)      : シグナル
-            digits             (int)      : 小数点の桁数
+            df           (DataFrame): ローソク足のデータフレーム
+            calculation_column (str): 計算用の列名
+            short              (int): 短期
+            long               (int): 長期
+            signal             (int): シグナル
+            digits             (int): 小数点の桁数
             
         Returns:
             DataFrame: テクニカル指標を追加後のデータフレーム
@@ -72,13 +73,11 @@ class TechnicalIndicators:
                     long=26, 
                     signal=9)
         """
-        df[f'macd_{short}_{long}'] = macd(
-            df[calculation_column].values.tolist(), short, long)
-        df[f'macd_signal_{signal}'] = sma(
-            df[f'macd_{short}_{long}'].values.tolist(), signal)
+        df[f'macd'] = macd(df[calculation_column].values.tolist(), short, long)
+        df[f'macd_signal'] = sma(df[f'macd'].values.tolist(), signal)
 
-        df[f'macd_{short}_{long}'] = df[f'macd_{short}_{long}'].round(digits)
-        df[f'macd_signal_{signal}'] = df[f'macd_signal_{signal}'].round(digits)
+        df[f'macd'] = df[f'macd'].round(digits)
+        df[f'macd_signal'] = df[f'macd_signal'].round(digits)
         
         return df
 
