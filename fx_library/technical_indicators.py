@@ -103,22 +103,23 @@ class TechnicalIndicators:
             >>> df = Tech.calculation_rci(
                     df=df, calculation_column='close', period=12)
         """
-        rci_col = f'rci_{period}'
-
-        df[rci_col] = np.nan
+        df['rci'] = np.nan
 
         for i, _ in df.iterrows():
             if i >= period:
                 period_df = df.loc[i - period:i - 1].copy()
                 period_df['date_rank'] = np.arange(period, 0, -1)
                 period_df = period_df.sort_values(
-                    calculation_column, ascending=False).reset_index(drop=True)
+                    calculation_column, ascending=False
+                ).reset_index(drop=True)
                 period_df['price_rank'] = np.arange(1, period + 1)
                 period_df['delta'] = (
-                    period_df['price_rank'] - period_df['date_rank']) ** 2
+                    period_df['price_rank'] - period_df['date_rank']
+                ) ** 2
                 d = period_df['delta'].sum()
-                df.loc[i, rci_col] = (
-                    (1 - (6 * d) / (period ** 3 - period)) * 100).round(digits)
+                df.loc[i, 'rci'] = (
+                    (1 - (6 * d) / (period ** 3 - period)) * 100
+                ).round(digits)
 
         return df
     
